@@ -21,6 +21,7 @@ namespace MISA.UT.WS.AppConsole.UnitTest
         public void Setup()
         {
             _productService = Substitute.For<IProductService>();
+            _sessionService = Substitute.For<ISessionService>();
             _orderService = new OrderService(
             _orderRepository,
             _productService,
@@ -57,6 +58,32 @@ namespace MISA.UT.WS.AppConsole.UnitTest
             var ts = Assert.Throws<BussinessException>(() => _orderService.Create(order));
 
             Assert.That(ts.Errors.Where(s => s.ErrorCode == "Err001").Count() == 1);
+        }
+
+        [Test]
+        public void Create_UserNotLogin_ThowException()
+        {
+            //Arrange
+            _productService.IsValid(Arg.Any<Order.Detail>()).Returns(true);
+            _sessionService.IsLoggedIn().Returns(false);
+
+            var order = new Order()
+            {
+                 
+
+                Details = new List<Order.Detail>()
+            {
+                new Order.Detail
+                {
+                    ProductID = Guid.NewGuid()
+                }
+            }
+            };
+
+            //Act + Assert
+            var ts = Assert.Throws<BussinessException>(() => _orderService.Create(order));
+
+            Assert.That(ts.ErrorCode == "LogErr01");
         }
     }
 }
